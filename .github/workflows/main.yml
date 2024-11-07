@@ -1,0 +1,110 @@
+name: Test and Build
+
+on:
+  push:
+    branches:
+      - pet-buddy-part-1
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  Test-and-build-on-iOS:
+    runs-on: macos-latest
+    name: Test-and-build-on-iOS
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+          
+      - name: Cache pods
+        uses: actions/cache@v3
+        with:
+          path: |
+            ios/Pods
+            ~/Library/Caches/CocoaPods
+            ~/.cocoapods
+          key: ${{ runner.os }}-pods-${{ hashFiles('ios/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pods-
+
+      - name: Cache Node Modules
+        uses: actions/cache@v3
+        with:
+          path: ./node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+              ${{ runner.os }}-node-modules-
+
+      - name: Install Cocoapods
+        run: sudo gem install cocoapods
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Install Pods 
+        run: |
+          cd ios
+          pod install
+
+      - name: Run Tests
+        run: npm test
+
+      - name: Build iOS
+        run: npx react-native build-ios
+
+
+  Test-and-build-on-android:
+    runs-on: macos-latest
+    name: Test-and-build-on-android
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Cache Node Modules
+        uses: actions/cache@v3
+        with:
+          path: ./node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+              ${{ runner.os }}-node-modules-
+
+      - name: Cache Gradle Wrapper
+        uses: actions/cache@v3
+        with:
+          path: ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}  
+
+      - name: Cache Gradle Dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-caches-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-caches-
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'adopt'
+          java-version: '17'
+
+      - name: Run Tests
+        run: npm test
+
+      - name: Build Android
+        run: npx react-native build-android
+          
+ 
