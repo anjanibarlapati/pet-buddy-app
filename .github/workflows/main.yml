@@ -3,7 +3,7 @@ name: Test and Build
 on:
   push:
     branches:
-      - pet-buddy-part-1
+      - pet-buddy-app-part-1
   pull_request:
     branches:
       - main
